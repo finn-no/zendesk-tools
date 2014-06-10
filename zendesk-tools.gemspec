@@ -22,4 +22,5 @@ Gem::Specification.new do |gem|
   gem.add_dependency "rake"
   gem.add_dependency "geminabox"
   gem.add_dependency "log4r"
+  gem.add_development_dependency "pry"
 end

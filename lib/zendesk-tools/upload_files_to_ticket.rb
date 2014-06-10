@@ -12,7 +12,7 @@ module ZendeskTools
       ticket = @client.tickets.find(:id => ticket_id)
       ticket or raise "fant ingen ticket med id #{ticket_id.inspect}"
 
-      ticket.comment = ZendeskAPI::TicketComment.new(@client, :value => "Vedlegg fra #{ZendeskTools.config['username']}")
+      ticket.comment = ZendeskAPI::Ticket::Comment.new(@client, :value => "Vedlegg fra #{ZendeskTools.config['username']}")
 
       files.each do |e|
         ticket.comment.uploads << e

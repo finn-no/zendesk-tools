@@ -1,3 +1,7 @@
+require 'net/http'
+require 'tmpdir'
+require 'fileutils'
+
 module ZendeskTools
   class RecoverSuspended < Command
     include Loggable
@@ -5,6 +9,11 @@ module ZendeskTools
     RECOVER_CAUSES = [
       "End-user only allowed to update their own tickets"
     ]
+
+    def initialize(*args)
+      super
+      @tmpdir = Dir.mktmpdir
+    end
 
     def run
       @client.suspended_tickets.each do |suspended_ticket|
@@ -22,22 +31,31 @@ module ZendeskTools
           content = suspended_ticket.content
 
           # * Create new comment with correct author and content
-          ticket = client.tickets.find(:id => ticket_id)
-          ticket.comment = { :value => content, :author_id => author_id }
+          ticket = @client.tickets.find(:id => ticket_id)
+          ticket.comment = ZendeskAPI::Ticket::Comment.new(@client, :value => content, :author_id => author_id)
 
           # * Check for attachments and logic around that
 
-          # not done yet
+          suspended_ticket.attachments.each do |attachment|
+            url  = attachment.fetch('content_url')
+            name = attachment.fetch('file_name')
+            path = File.join(@tmpdir, name)
 
-          # * Ticket upload mechanic for the attachments
+            log.info "downloading #{url}"
 
-          # not done yet
+            File.open(path, 'wb') { |file| download(url, file) }
+            ticket.comment.uploads << path
+          end
 
           # * Save comment and upload it to zendesk
+
+          log.info "uploading"
           ticket.save
 
           # * delete/destroy the recovered ticket
           suspended_ticket.destroy
+          log.info "cleaning up"
+          FileUtils.rm_rf @tmpdir
         else
           log.info "Not recovering: #{suspended_ticket.subject}"
         end
@@ -45,6 +63,34 @@ module ZendeskTools
     end
 
     private
+
+    def download(url, destination)
+      uri = URI.parse(url)
+
+      resp = Net::HTTP.get_response(uri) do |response|
+        total = response.content_length
+        progress = 0
+        segment_count = 0
+
+        response.read_body do |segment|
+          progress += segment.length
+          segment_count += 1
+
+          if segment_count % 15 == 0
+            percent = (progress.to_f / total.to_f) * 100
+            print "\rDownloading #{url}: #{percent.to_i}% (#{progress} / #{total})"
+            $stdout.flush
+            segment_count = 0
+          end
+
+          destination.write(segment)
+        end
+      end
+
+      unless resp.kind_of?(Net::HTTPSuccess)
+        raise "ERROR:#{resp.code} for #{url}"
+      end
+    end
 
     def should_recover?(suspended_ticket)
       cause   = suspended_ticket.cause
