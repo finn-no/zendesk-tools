@@ -11,6 +11,7 @@ require 'zendesk-tools/loggable'
 require 'zendesk-tools/command'
 require 'zendesk-tools/clean_suspended'
 require 'zendesk-tools/upload_files_to_ticket'
+require 'zendesk-tools/recover_suspended'
 
 module ZendeskTools
   CONFIG_FILE = Pathname.new(File.expand_path("~/.zendesk-tools.json"))

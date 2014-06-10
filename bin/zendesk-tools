@@ -14,6 +14,8 @@ when 'clean-suspended'
   ZendeskTools::CleanSuspended.run(ARGV)
 when 'upload-files-to-ticket'
   ZendeskTools::UploadFilesToTicket.run(ARGV)
+when 'recover-suspended'
+	ZendeskTools::RecoverSuspended.run(ARGV)
 else
   abort "Sorry, I don't know how to #{cmd.inspect}"
 end
