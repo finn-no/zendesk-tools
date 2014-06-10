@@ -6,7 +6,7 @@ Tools to automate common tasks in ZenDesk.
 
 Install the gem:
 
-    $ gem install zendesk-tools --source "http://gems.finn.no"
+    $ gem install zendesk-tools
 
 ## Usage
 
