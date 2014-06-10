@@ -3,9 +3,7 @@ module ZendeskTools
     include Loggable
 
     RECOVER_CAUSES = [
-      "Detected email as being from a system user",
-      "Detected as mail loop",
-      "Automated response mail"
+      "End-user only allowed to update their own tickets"
     ]
 
     def run
@@ -15,10 +13,31 @@ module ZendeskTools
           # Logic for recovering the tickets
           # Need to add logic for:
           # * Grab ticket_id
+          ticket_id = suspended_ticket.ticket_id
+
           # * Grab author_id
-          # * Grab content (and check for attachment with own logic)
-          # * Create new comment with the info from above
+          author_id = suspended_ticket.author.id
+
+          # * Grab content
+          content = suspended_ticket.content
+
+          # * Create new comment with correct author and content
+          ticket = client.tickets.find(:id => ticket_id)
+          ticket.comment = { :value => content, :author_id => author_id }
+
+          # * Check for attachments and logic around that
+
+          # not done yet
+
+          # * Ticket upload mechanic for the attachments
+
+          # not done yet
+
+          # * Save comment and upload it to zendesk
+          ticket.save
+
           # * delete/destroy the recovered ticket
+          suspended_ticket.destroy
         else
           log.info "Not recovering: #{suspended_ticket.subject}"
         end
