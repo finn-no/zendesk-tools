@@ -32,4 +32,6 @@ Upload files to ticket:
 
     $ zendesk-tools upload-files-to-ticket <ticket_id> <files>
 
+Recover suspended tickets:
 
+	$ zendesk-tools recover-suspended
