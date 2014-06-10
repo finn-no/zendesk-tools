@@ -1,6 +1,8 @@
 require 'bundler/setup'
 require 'rake/clean'
 
+Bundler::GemHelper.install_tasks
+
 CLEAN << "pkg"
 CLEAN << "*.gem"
 
@@ -15,7 +17,3 @@ end
 desc "Build #{zdt_gem.name}"
 task :build => [:clean, zdt_gem.name]
 
-desc "Release #{zdt_gem.name}"
-task :release => :build do
-  sh "gem inabox #{zdt_gem.name}"
-end
