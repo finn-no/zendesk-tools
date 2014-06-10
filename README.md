@@ -1,6 +1,6 @@
 # ZendeskTools
 
-Tools to automate common tasks in FINNs ZenDesk.
+Tools to automate common tasks in ZenDesk.
 
 ## Installation
 
@@ -15,8 +15,8 @@ Add a JSON config to ~/.zendesk-tools.json (TODO: make command line ovveride):
     {
 
       // mandatory
-      "username": "jari@finn.no",
-      "token": "f1d2d2f924e986ac....",
+      "username": "user@example.com",
+      "token": "your_token_here",
 
       // optional
       "log_level": "debug",
