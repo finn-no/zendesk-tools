@@ -1,0 +1,19 @@
+#!/usr/bin/env ruby
+
+require 'zendesk-tools'
+
+cmd = ARGV.shift
+
+if cmd.nil?
+  ZendeskTools.show_config
+  exit 1
+end
+
+case cmd
+when 'clean-suspended'
+  ZendeskTools::CleanSuspended.run(ARGV)
+when 'upload-files-to-ticket'
+  ZendeskTools::UploadFilesToTicket.run(ARGV)
+else
+  abort "Sorry, I don't know how to #{cmd.inspect}"
+end
