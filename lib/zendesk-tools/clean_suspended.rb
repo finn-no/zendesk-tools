@@ -3,10 +3,20 @@ module ZendeskTools
     include Loggable
 
     # Array with delete causes. Defined in config file
-    DELETE_CAUSES = config['delete_causes']
+    DELETE_CAUSES = ZendeskTools.config['delete_causes'] || [
+      "Detected email as being from a system user",
+      "Detected as mail loop",
+      "Automated response mail"
+    ]
 
     # Array with delete subjects. Defined in config file
-    DELETE_SUBJECTS = config['delete_subjects']
+    DELETE_SUBJECTS = ZendeskTools.config['delete_subjects'] || [
+      "Returned mail: see transcript",
+      "Delivery Status Notification (Failure)",
+      "Undeliverable:",
+      "Kan ikke leveres:",
+      "Automatisk svar"
+    ]
 
     def run
       @client.suspended_tickets.each do |suspended_ticket|

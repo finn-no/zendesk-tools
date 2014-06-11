@@ -7,7 +7,9 @@ module ZendeskTools
     include Loggable
 
     # Array with recover causes. Defined in config file
-    RECOVER_CAUSES = config['recover_causes']
+    RECOVER_CAUSES = ZendeskTools.config['recover_causes'] || [
+      "End-user only allowed to update their own tickets"
+    ]
 
     def initialize(*args)
       super
