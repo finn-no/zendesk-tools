@@ -2,21 +2,26 @@ module ZendeskTools
   class CleanSuspended < Command
     include Loggable
 
-    # Array with delete causes. Defined in config file
-    DELETE_CAUSES = ZendeskTools.config['delete_causes'] || [
-      "Detected email as being from a system user",
-      "Detected as mail loop",
-      "Automated response mail"
-    ]
 
     # Array with delete subjects. Defined in config file
-    DELETE_SUBJECTS = ZendeskTools.config['delete_subjects'] || [
-      "Returned mail: see transcript",
-      "Delivery Status Notification (Failure)",
-      "Undeliverable:",
-      "Kan ikke leveres:",
-      "Automatisk svar"
-    ]
+
+    def initialize(*args)
+      super
+
+      @delete_causes = ZendeskTools.config['delete_causes'] || [
+        "Detected email as being from a system user",
+        "Detected as mail loop",
+        "Automated response mail"
+      ]
+
+      @delete_subjects = ZendeskTools.config['delete_subjects'] || [
+        "Returned mail: see transcript",
+        "Delivery Status Notification (Failure)",
+        "Undeliverable:",
+        "Kan ikke leveres:",
+        "Automatisk svar"
+      ]
+    end
 
     def run
       @client.suspended_tickets.each do |suspended_ticket|
@@ -35,8 +40,8 @@ module ZendeskTools
       cause   = suspended_ticket.cause
       subject = suspended_ticket.subject
 
-      DELETE_CAUSES.any? { |delete_cause| cause.include?(delete_cause) } ||
-        DELETE_SUBJECTS.any? { |delete_subject|  subject.include?(delete_subject) }
+      @delete_causes.any? { |delete_cause| cause.include?(delete_cause) } ||
+        @delete_subjects.any? { |delete_subject|  subject.include?(delete_subject) }
     end
   end
 end

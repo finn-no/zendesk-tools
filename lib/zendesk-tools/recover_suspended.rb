@@ -6,14 +6,15 @@ module ZendeskTools
   class RecoverSuspended < Command
     include Loggable
 
-    # Array with recover causes. Defined in config file
-    RECOVER_CAUSES = ZendeskTools.config['recover_causes'] || [
-      "End-user only allowed to update their own tickets"
-    ]
 
     def initialize(*args)
       super
+
       @tmpdir = Dir.mktmpdir
+
+      @recover_causes = ZendeskTools.config['recover_causes'] || [
+        "End-user only allowed to update their own tickets"
+      ]
     end
 
     def run
@@ -89,7 +90,7 @@ module ZendeskTools
       cause   = suspended_ticket.cause
       subject = suspended_ticket.subject
 
-      RECOVER_CAUSES.any? { |recover_cause| cause.include?(recover_cause) }
+      @recover_causes.any? { |recover_cause| cause.include?(recover_cause) }
     end
   end
 end
