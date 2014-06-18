@@ -18,7 +18,7 @@ Add a JSON config to ~/.zendesk-tools.json (TODO: make command line ovveride):
     // mandatory
     "username": "user@example.com",
     "token": "your_token_here",
-    "url": "https://your_domain.zendesk.com/api/v2"
+    "url": "https://your_domain.zendesk.com/api/v2",
 
     //include at least one cause
     "delete_causes": ["cause1", "cause2"],
