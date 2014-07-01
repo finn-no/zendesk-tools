@@ -66,7 +66,7 @@ module ZendeskTools
     end
 
     def should_recover?(suspended_ticket)
-      cause   = suspended_ticket.cause
+      cause = suspended_ticket.cause
 
       @recover_causes.any? { |recover_cause| cause.include?(recover_cause) }
     end
