@@ -18,45 +18,77 @@ module ZendeskTools
     end
 
     def run
-      @client.suspended_tickets.each do |suspended_ticket|
-        if should_recover?(suspended_ticket)
-          log.info "Recovering: #{suspended_ticket.subject}"
-
-          ticket_id = suspended_ticket.ticket_id
-          author_id = suspended_ticket.author.id
-          content = suspended_ticket.content
-
-          # * Create new comment with correct author and content
-          ticket = @client.tickets.find(:id => ticket_id)
-          ticket.comment = ZendeskAPI::Ticket::Comment.new(@client, :value => content, :author_id => author_id)
-
-          # * Check for attachments and upload it to comment if it exists
-          suspended_ticket.attachments.each do |attachment|
-            url  = attachment.fetch('content_url')
-            name = attachment.fetch('file_name')
-            path = File.join(@tmpdir, name)
-
-            log.info "downloading #{url}"
-
-            File.open(path, 'wb') { |file| download(url, file) }
-            ticket.comment.uploads << path
-          end
-
-          # * Save comment and upload it to zendesk
-          log.info "uploading"
-          ticket.save
-
-          # * delete/destroy the recovered ticket
-          suspended_ticket.destroy
-          log.info "cleaning up"
-          FileUtils.rm_rf @tmpdir
-        else
-          log.info "Not recovering: #{suspended_ticket.subject}"
-        end
-      end
+      @client.suspended_tickets.each { |suspended_ticket| process_ticket(suspended_ticket) }
     end
 
     private
+
+    def process_ticket(suspended_ticket)
+      if should_recover?(suspended_ticket)
+        subject = suspended_ticket.subject
+        author_id = suspended_ticket.author.id
+        author_email = suspended_ticket.author.email
+        content = suspended_ticket.content
+        
+        log.info "Recovering: #{subject}"
+
+        # If there is no ticketID, we need to create a new ticket. Otherwise we update with new comment.
+        if suspended_ticket.ticket_id.nil?
+          ticket = create_ticket(suspended_ticket, author_email, content, subject)
+        else
+          ticket_id = suspended_ticket.ticket_id
+          ticket = update_ticket(suspended_ticket, author_id, content, ticket_id)
+        end
+
+        # * Check for attachments and upload it to comment if it exists
+        suspended_ticket.attachments.each do |attachment|
+          url  = attachment.fetch('content_url')
+          name = attachment.fetch('file_name')
+          path = File.join(@tmpdir, name)
+
+          log.info "downloading #{url}"
+
+          File.open(path, 'wb') { |file| download(url, file) }
+          ticket.comment.uploads << path
+        end
+
+        # * Save comment and upload it to zendesk.
+        log.info "uploading"
+        ticket.save
+
+        # * delete/destroy the recovered ticket
+        suspended_ticket.destroy
+        log.info "cleaning up"
+        FileUtils.rm_rf @tmpdir
+      else
+        log.info "Not recovering: #{suspended_ticket.subject}"
+      end
+    end
+
+    def should_recover?(suspended_ticket)
+      cause = suspended_ticket.cause
+
+      @recover_causes.any? { |recover_cause| cause.include?(recover_cause) }
+    end
+
+    def create_ticket(suspended_ticket, author_email, content, subject)
+      # Create a new ticket with info from suspended ticket
+      user_id = @client.users.search(:query => author_email).first.id
+
+      @client.tickets.create(
+        :subject => subject,
+        :comment => { :value => content }, 
+        :submitter_id => user_id,
+        :requester_id => user_id
+        )
+    end
+
+    def update_ticket(suspended_ticket, author_id, content, ticket_id)
+      # * Update ticket with info from suspended ticket
+      ticket = @client.tickets.find(:id => ticket_id)
+      ticket.comment = ZendeskAPI::Ticket::Comment.new(@client, :value => content, :author_id => author_id)
+      ticket
+    end
 
     def download(url, destination)
       uri = URI.parse(url)
@@ -85,12 +117,6 @@ module ZendeskTools
         raise "ERROR:#{resp.code} for #{url}"
       end
     end
-
-    def should_recover?(suspended_ticket)
-      cause   = suspended_ticket.cause
-      subject = suspended_ticket.subject
-
-      @recover_causes.any? { |recover_cause| cause.include?(recover_cause) }
-    end
+  
   end
 end
