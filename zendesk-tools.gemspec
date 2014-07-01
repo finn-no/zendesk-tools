@@ -6,8 +6,8 @@ require 'zendesk-tools/version'
 Gem::Specification.new do |gem|
   gem.name          = "zendesk-tools"
   gem.version       = ZendeskTools::VERSION
-  gem.authors       = ["Jari Bakken", "Eivind Throndsen"]
-  gem.email         = ["jari@finn.no", "eivind.throndsen@finn.no"]
+  gem.authors       = ["Jari Bakken", "Eivind Throndsen", "Ole Andreas Sandring"]
+  gem.email         = ["jari@finn.no", "eivind.throndsen@finn.no", "oas@finn.no"]
   gem.description   = %q{Tools for FINNs ZenDesk}
   gem.summary       = %q{Tools for FINNs ZenDesk}
   gem.homepage      = "https://github.com/finn-no/zendesk-tools"
