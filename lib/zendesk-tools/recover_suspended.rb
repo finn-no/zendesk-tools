@@ -26,18 +26,17 @@ module ZendeskTools
     def process_ticket(suspended_ticket)
       if should_recover?(suspended_ticket)
         subject = suspended_ticket.subject
-        author_id = suspended_ticket.author.id
-        author_email = suspended_ticket.author.email
+        user_id = get_user_id(suspended_ticket)
         content = suspended_ticket.content
         
         log.info "Recovering: #{subject}"
 
         # If there is no ticketID, we need to create a new ticket. Otherwise we update with new comment.
         if suspended_ticket.ticket_id.nil?
-          ticket = create_ticket(suspended_ticket, author_email, content, subject)
+          ticket = create_ticket(user_id, content, subject)
         else
           ticket_id = suspended_ticket.ticket_id
-          ticket = update_ticket(suspended_ticket, author_id, content, ticket_id)
+          ticket = update_ticket(user_id, content, ticket_id)
         end
 
         # * Check for attachments and upload it to comment if it exists
@@ -71,22 +70,29 @@ module ZendeskTools
       @recover_causes.any? { |recover_cause| cause.include?(recover_cause) }
     end
 
-    def create_ticket(suspended_ticket, author_email, content, subject)
-      # Create a new ticket with info from suspended ticket
-      user_id = @client.users.search(:query => author_email).first.id
+    def get_user_id(suspended_ticket)
+      if suspended_ticket.author.id.nil?
+        user_id = @client.users.search(:query => suspended_ticket.author.email).first.id
+      else
+        user_id = suspended_ticket.author.id
+      end
+      user_id
+    end
 
+    def create_ticket(user_id, content, subject)
+      # Create a new ticket with info from suspended ticket
       @client.tickets.create(
         :subject => subject,
-        :comment => { :value => content }, 
+        :comment => { :value => content, :author_id => user_id }, 
         :submitter_id => user_id,
         :requester_id => user_id
         )
     end
 
-    def update_ticket(suspended_ticket, author_id, content, ticket_id)
+    def update_ticket(user_id, content, ticket_id)
       # * Update ticket with info from suspended ticket
       ticket = @client.tickets.find(:id => ticket_id)
-      ticket.comment = ZendeskAPI::Ticket::Comment.new(@client, :value => content, :author_id => author_id)
+      ticket.comment = ZendeskAPI::Ticket::Comment.new(@client, :value => content, :author_id => user_id)
       ticket
     end
 
