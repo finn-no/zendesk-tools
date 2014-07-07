@@ -20,6 +20,22 @@ module ZendeskTools
     @config ||= (
       if CONFIG_FILE.exist?
         JSON.parse(CONFIG_FILE.read)
+      elsif ENV['ZD_URL'] && ENV['ZD_TOKEN'] && ENV['ZD_USERNAME']
+        heroku_config = { 
+         'delete_causes' => ENV['delete_causes'],
+         'delete_subjects' => ENV['delete_subjects'],
+         'recover_causes' => ENV['recover_causes']
+        }
+        heroku_config.each do |key, value| 
+         unless value.nil?
+           heroku_config[key] = value.split(';')
+          end
+        end
+        heroku_config['url'] = ENV['ZD_URL']
+        heroku_config['token'] = ENV['ZD_TOKEN']
+        heroku_config['username'] = ENV['ZD_USERNAME']
+
+        heroku_config
       else
         raise "Sorry, could not find JSON config in #{CONFIG_FILE}"
       end
