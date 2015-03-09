@@ -28,7 +28,7 @@ module ZendeskTools
         subject = suspended_ticket.subject
         user_id = get_user_id(suspended_ticket)
         content = suspended_ticket.content
-        
+
         log.info "Recovering: #{subject}"
 
         # If there is no ticketID, we need to create a new ticket. Otherwise we update with new comment.
@@ -83,7 +83,7 @@ module ZendeskTools
       # Create a new ticket with info from suspended ticket
       @client.tickets.create(
         :subject => subject,
-        :comment => { :value => content, :author_id => user_id }, 
+        :comment => { :value => content, :author_id => user_id },
         :submitter_id => user_id,
         :requester_id => user_id
         )
@@ -119,10 +119,17 @@ module ZendeskTools
         end
       end
 
-      unless resp.kind_of?(Net::HTTPSuccess)
+      case resp
+      when Net::HTTPSuccess
+        # ok
+      when Net::HTTPRedirection
+        url = resp['Location']
+        log.info "redirecting to #{url}"
+        retry
+      else
         raise "ERROR:#{resp.code} for #{url}"
       end
     end
-  
+
   end
 end
