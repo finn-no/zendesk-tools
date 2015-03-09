@@ -119,17 +119,9 @@ module ZendeskTools
         end
       end
 
-      case resp
-      when Net::HTTPSuccess
-        # ok
-      when Net::HTTPRedirection
-        url = resp['Location']
-        log.info "redirecting to #{url}"
-        retry
-      else
+      unless resp.kind_of?(Net::HTTPSuccess)
         raise "ERROR:#{resp.code} for #{url}"
       end
     end
-
   end
 end
